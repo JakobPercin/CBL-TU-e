@@ -173,7 +173,7 @@ public class Game {
         """;
 
     static final int MAX_HEALTH = 10;
-    static final int SIGHT = 6, VIEW_ROWS = 14, VIEW_COLS = 40, KEYS = 6;
+    static final int SIGHT = 6, VIEW_ROWS = 5, VIEW_COLS = 9, KEYS = 6;
     static final int TILE_SIZE = 64; // pixels 
 
     static char[][] map;
@@ -187,6 +187,7 @@ public class Game {
     static Map<Character, BufferedImage> textures = new HashMap<>();
     static GamePanel screen;
 
+    
     public static void main(String[] args) {
         loadLevel();
         loadTextures();
@@ -195,11 +196,12 @@ public class Game {
         screen.setFocusable(true);
 
         screen.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                turn(e.getKeyChar());
-            }
+        @Override
+        public void keyPressed(KeyEvent e) { 
+            turn(e); 
+        }
         });
+
 
         JFrame window = new JFrame("Dungeon");
         window.add(screen);
@@ -213,7 +215,7 @@ public class Game {
 
     static void loadTextures() {
         Map<Character, String> textureFiles = Map.of(
-            '@', "textures/Haunter.png",
+            '@', "textures/goldfish.png",
             '#', "textures/wall.png",
             '.', "textures/floor.png",
             'E', "textures/enemy.png",
@@ -259,8 +261,8 @@ public class Game {
         g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
         g.setColor(Color.WHITE);
         g.drawRect(0, 0, TILE_SIZE - 1, TILE_SIZE - 1);
-        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
-        g.drawString(symbol, TILE_SIZE / 4, (TILE_SIZE * 3) / 4);
+        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 32));
+        g.drawString(symbol, TILE_SIZE / 3, (TILE_SIZE * 2) / 3);
         g.dispose();
         return img;
     }
@@ -282,14 +284,16 @@ public class Game {
         }
     }
 
-    static void turn(char key) {
+    static void turn(KeyEvent e) {
         if (health <= 0 || won) return;
-        key = Character.toLowerCase(key);
-        if (key == 'w') move(-1, 0);
-        else if (key == 's') move(1, 0);
-        else if (key == 'a') move(0, -1);
-        else if (key == 'd') move(0, 1);
-        else if (Character.isDigit(key)) useItem(key - '1');
+        int keyCode = e.getKeyCode();
+        char keyChar = Character.toLowerCase(e.getKeyChar());
+
+        if (keyChar == 'w' || keyCode == KeyEvent.VK_UP) move(-1, 0);
+        else if (keyChar == 's' || keyCode == KeyEvent.VK_DOWN) move(1, 0);
+        else if (keyChar == 'a' || keyCode == KeyEvent.VK_LEFT) move(0, -1);
+        else if (keyChar == 'd' || keyCode == KeyEvent.VK_RIGHT) move(0, 1);
+        else if (Character.isDigit(keyChar)) useItem(keyChar - '1');
         else return;
         if (!won) moveEnemies();
         draw();
@@ -355,6 +359,7 @@ public class Game {
         }
     }
 
+    
     static class GamePanel extends JPanel {
         private final int hudHeight = 60;
 
