@@ -173,7 +173,7 @@ public class Game {
         """;
 
     static final int MAX_HEALTH = 10;
-    static final int SIGHT = 6, VIEW_ROWS = 14, VIEW_COLS = 40, KEYS = 6;
+    static final int SIGHT = 6, VIEW_ROWS = 5, VIEW_COLS = 9, KEYS = 6;
     static final int TILE_SIZE = 64; // pixels 
 
     static char[][] map;
@@ -213,7 +213,7 @@ public class Game {
 
     static void loadTextures() {
         Map<Character, String> textureFiles = Map.of(
-            '@', "textures/Haunter.png",
+            '@', "textures/goldfish.png",
             '#', "textures/wall.png",
             '.', "textures/floor.png",
             'E', "textures/enemy.png",
@@ -259,8 +259,8 @@ public class Game {
         g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
         g.setColor(Color.WHITE);
         g.drawRect(0, 0, TILE_SIZE - 1, TILE_SIZE - 1);
-        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 14));
-        g.drawString(symbol, TILE_SIZE / 4, (TILE_SIZE * 3) / 4);
+        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 32));
+        g.drawString(symbol, TILE_SIZE / 3, (TILE_SIZE * 2) / 3);
         g.dispose();
         return img;
     }
