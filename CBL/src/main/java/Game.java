@@ -173,7 +173,7 @@ public class Game {
         """;
 
     static final int MAX_HEALTH = 10;
-    static final int SIGHT = 6, VIEW_ROWS = 5, VIEW_COLS = 9, KEYS = 6;
+    static final int SIGHT = 3, VIEW_ROWS = 6, VIEW_COLS = 9, KEYS = 4;
     static final int TILE_SIZE = 64; // pixels 
 
     static char[][] map;
@@ -214,16 +214,20 @@ public class Game {
     }
 
     static void loadTextures() {
-        Map<Character, String> textureFiles = Map.of(
-            '@', "textures/goldfish.png",
-            '#', "textures/wall.png",
-            '.', "textures/floor.png",
-            'E', "textures/enemy.png",
-            '+', "textures/item.png",
-            'K', "textures/key.png",
-            'D', "textures/door.png",
-            ' ', "textures/fog.png"
-        );
+        Map<Character, String> textureFiles = Map.ofEntries(
+        Map.entry('@', "textures/goldfish.png"),
+        Map.entry('#', "textures/wall.png"),
+        Map.entry('.', "textures/floor.png"),
+        Map.entry('E', "textures/enemy.png"),
+        Map.entry('+', "textures/item.png"),
+        Map.entry('K', "textures/key.png"),
+        Map.entry('D', "textures/door.png"),
+        Map.entry(' ', "textures/fog.png"),
+        Map.entry('v', "textures/arrow_down.png"),
+        Map.entry('^', "textures/arrow_up.png"),
+        Map.entry('<', "textures/arrow_left.png"),
+        Map.entry('>', "textures/arrow_right.png")
+);
 
         Map<Character, Color> fallbackColors = Map.of(
             '@', Color.BLUE,
