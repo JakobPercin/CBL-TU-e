@@ -359,7 +359,6 @@ public class Game {
         }
     }
 
-    
     static class GamePanel extends JPanel {
         private final int hudHeight = 60;
 
@@ -438,7 +437,7 @@ public class Game {
                 message = "You died.";
             } else {
                 g.setColor(Color.LIGHT_GRAY);
-                message = "Move: W A S D   |   Use item: Number key (1-9)";
+                message = "Use WASD or arrow keys to move | Use item: Number key (1-9)";
             }
             g.drawString(message, 15, yHudStart + 48);
         }
