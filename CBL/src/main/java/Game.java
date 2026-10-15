@@ -1,4 +1,3 @@
-
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -23,7 +22,7 @@ public class Game {
                                                      #.......................................#               #..#...........#.....########                                      ##
                                                      #.###.########...............E..........#               #..#....E......#.....##.....#                                     ##
                                                      #...........##..........................#               #..#...........#.....##.....#                                    ###
-                                                     #.###....@..##..........................#               #.E....E.......#.....##.E.+.#                                  ####
+                                                     #.###.S..@.O##..........................#               #.E....E.......#.....##.E.+.#                                  ####
                                                      #.# #.......##.....................E....#               #..#...........#....E##...E.#                                 ###
                                                      #.# #.......##..........................#               #..#.............+...##.....#                               ####
                                                      #.# #.......##.........+................#   #############..#....E......#.....##.....#                             ####
@@ -172,13 +171,19 @@ public class Game {
                                 ##
         """;
 
-    static final int MAX_HEALTH = 10;
+    static final int MAX_HEALTH = 30;
     static final int SIGHT = 3, VIEW_ROWS = 6, VIEW_COLS = 9, KEYS = 4;
     static final int TILE_SIZE = 64; // pixels 
 
+    // Combat tuning
+    static final int ENEMY_HEALTH = 2, ENEMY_DAMAGE = 3, MIN_DAMAGE = 1;
+    static final int BASE_ATTACK = 1, RESIT_HEAL = 9;
+
     static char[][] map;
     static boolean[][] seen;
+    static int[][] enemyHp;
     static int row, col, health = MAX_HEALTH, keys = 0;
+    static int swords = 0, shields = 0;
     static boolean won = false;
     static ArrayList<String> inventory = new ArrayList<>();
     static Random random = new Random();
@@ -222,6 +227,8 @@ public class Game {
         Map.entry('+', "textures/item.png"),
         Map.entry('K', "textures/key.png"),
         Map.entry('D', "textures/door.png"),
+        Map.entry('S', "textures/sword.png"),
+        Map.entry('O', "textures/shield.png"),
         Map.entry(' ', "textures/fog.png"),
         Map.entry('v', "textures/arrow_down.png"),
         Map.entry('^', "textures/arrow_up.png"),
@@ -229,15 +236,17 @@ public class Game {
         Map.entry('>', "textures/arrow_right.png")
 );
 
-        Map<Character, Color> fallbackColors = Map.of(
-            '@', Color.BLUE,
-            '#', Color.DARK_GRAY,
-            '.', Color.LIGHT_GRAY,
-            'E', Color.RED,
-            '+', Color.GREEN,
-            'K', Color.YELLOW,
-            'D', Color.MAGENTA,
-            ' ', Color.BLACK
+        Map<Character, Color> fallbackColors = Map.ofEntries(
+            Map.entry('@', Color.BLUE),
+            Map.entry('#', Color.DARK_GRAY),
+            Map.entry('.', Color.LIGHT_GRAY),
+            Map.entry('E', Color.RED),
+            Map.entry('+', Color.GREEN),
+            Map.entry('K', Color.YELLOW),
+            Map.entry('D', Color.MAGENTA),
+            Map.entry('S', Color.ORANGE),
+            Map.entry('O', Color.CYAN),
+            Map.entry(' ', Color.BLACK)
         );
                                                                                                             
         for (Map.Entry<Character, String> entry : textureFiles.entrySet()) {
@@ -275,17 +284,29 @@ public class Game {
         String[] lines = LEVEL.split("\n");
         map = new char[lines.length][];
         seen = new boolean[lines.length][];
+        enemyHp = new int[lines.length][];
         for (int r = 0; r < lines.length; r++) {
             map[r] = lines[r].toCharArray();
             seen[r] = new boolean[map[r].length];
-            int c = lines[r].indexOf('@');
+            enemyHp[r] = new int[map[r].length];
+            for (int ec = 0; ec < map[r].length; ec++)
+                if (map[r][ec] == 'E') enemyHp[r][ec] = ENEMY_HEALTH;
 
+            int c = lines[r].indexOf('@');
             if (c >= 0) {
                 row = r;
                 col = c;
                 map[r][c] = '.';
             }
         }
+    }
+
+    static int attackPower() {
+        return BASE_ATTACK + swords;
+    }
+
+    static int damageTaken() {
+        return Math.max(MIN_DAMAGE, ENEMY_DAMAGE - shields);
     }
 
     static void turn(KeyEvent e) {
@@ -313,12 +334,25 @@ public class Game {
         char cell = cellAt(r, c);
         if (cell == '#') return;
         if (cell == 'E') {
-            map[r][c] = '.';
-            health--;
+            enemyHp[r][c] -= attackPower();
+            if (enemyHp[r][c] <= 0) {
+                map[r][c] = '.';
+                enemyHp[r][c] = 0;
+            } else {
+                health -= damageTaken(); // enemy survived, hits back
+            }
             return;
         }
         if (cell == '+') {
             inventory.add("resit");
+            map[r][c] = '.';
+        }
+        if (cell == 'S') {
+            swords++;
+            map[r][c] = '.';
+        }
+        if (cell == 'O') {
+            shields++;
             map[r][c] = '.';
         }
         if (cell == 'K') {
@@ -334,7 +368,7 @@ public class Game {
     static void useItem(int slot) {
         if (slot < 0 || slot >= inventory.size()) return;
         inventory.remove(slot);
-        health = Math.min(MAX_HEALTH, health + 3);
+        health = Math.min(MAX_HEALTH, health + RESIT_HEAL);
     }
 
     static void moveEnemies() {
@@ -349,10 +383,12 @@ public class Game {
             if (Math.abs(dRow) <= SIGHT && Math.abs(dCol) <= SIGHT && random.nextBoolean())
                 step = Math.abs(dRow) > Math.abs(dCol) ? steps[dRow < 0 ? 0 : 1] : steps[dCol < 0 ? 2 : 3];
             int r = enemy[0] + step[0], c = enemy[1] + step[1];
-            if (r == row && c == col) health--;
+            if (r == row && c == col) health -= damageTaken();
             else if (cellAt(r, c) == '.') {
                 map[enemy[0]][enemy[1]] = '.';
                 map[r][c] = 'E';
+                enemyHp[r][c] = enemyHp[enemy[0]][enemy[1]];
+                enemyHp[enemy[0]][enemy[1]] = 0;
             }
         }
     }
@@ -424,8 +460,10 @@ public class Game {
             g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
 
             StringBuilder status = new StringBuilder();
-            status.append("ECTS ").append(health).append("/").append(MAX_HEALTH)
+            status.append("ECTS ").append(Math.max(0, health)).append("/").append(MAX_HEALTH)
                   .append("  |  Keys ").append(keys).append("/").append(KEYS)
+                  .append("  |  ATK ").append(attackPower())
+                  .append("  |  DEF ").append(shields)
                   .append("  |  Items:");
             for (int i = 0; i < inventory.size(); i++) {
                 status.append(" ").append(i + 1).append("=").append(inventory.get(i));
