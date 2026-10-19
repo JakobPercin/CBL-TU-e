@@ -172,12 +172,18 @@ public class Game {
         """;
 
     static final int MAX_HEALTH = 15;
-    static final int SIGHT = 3, VIEW_ROWS = 6, VIEW_COLS = 9, KEYS = 4;
+    static final int SIGHT = 3; 
+    static final int VIEW_ROWS = 6; 
+    static final int VIEW_COLS = 9;
+    static final int KEYS = 4;
     static final int TILE_SIZE = 64; // pixels 
 
     // Combat tuning
-    static final int ENEMY_HEALTH = 2, ENEMY_DAMAGE = 3, MIN_DAMAGE = 1;
-    static final int BASE_ATTACK = 1, RESIT_HEAL = 7;
+    static final int ENEMY_HEALTH = 2;
+    static final int ENEMY_DAMAGE = 3;
+    static final int MIN_DAMAGE = 1;
+    static final int BASE_ATTACK = 1;
+    static final int RESIT_HEAL = 7;
 
     static char[][] map;
     static boolean[][] seen;
@@ -185,11 +191,15 @@ public class Game {
     static int row, col, health = MAX_HEALTH, keys = 0;
     static int swords = 0, shields = 0;
     static boolean won = false;
+    static boolean inMenu = true; 
+    static boolean inCredits = false;
     static ArrayList<String> inventory = new ArrayList<>();
     static Random random = new Random();
 
     // Map characters to their loaded BufferedImage textures
     static Map<Character, BufferedImage> textures = new HashMap<>();
+    static BufferedImage menuBackgroundImg = null;   
+    static BufferedImage creditsBackgroundImg = null;
     static GamePanel screen;
 
     
@@ -216,6 +226,16 @@ public class Game {
         window.setVisible(true);
         screen.requestFocusInWindow();
         draw();
+    }
+
+    static void resetGame() {
+        loadLevel();
+        health = MAX_HEALTH;
+        keys = 0;
+        swords = 0;
+        shields = 0;
+        won = false;
+        inventory.clear();
     }
 
     static void loadTextures() {
@@ -252,6 +272,7 @@ public class Game {
         for (Map.Entry<Character, String> entry : textureFiles.entrySet()) {
             char key = entry.getKey();
             BufferedImage img = null;
+
             try {
                 File file = new File(entry.getValue());
                 if (file.exists()) {
@@ -265,6 +286,20 @@ public class Game {
             }
             textures.put(key, img);
         }
+
+        try {
+            File menuBgFile = new File("textures/menu_bg.png");
+            if (menuBgFile.exists()) {
+                menuBackgroundImg = ImageIO.read(menuBgFile);
+            }
+        } catch (IOException ignored) {}
+
+        try {
+            File creditsBgFile = new File("textures/credits_bg.png");
+            if (creditsBgFile.exists()) {
+                creditsBackgroundImg = ImageIO.read(creditsBgFile);
+            }
+        } catch (IOException ignored) {}
     }
 
     private static BufferedImage createFallbackTile(Color c, String symbol) {
@@ -313,6 +348,32 @@ public class Game {
         if (health <= 0 || won) return;
         int keyCode = e.getKeyCode();
         char keyChar = Character.toLowerCase(e.getKeyChar());
+
+        if (inMenu) {
+            if (inCredits) {
+                if (keyCode == KeyEvent.VK_ESCAPE || keyChar == 'b') {
+                    inCredits = false;
+                    draw();
+                }
+            } else {
+                if (keyCode == KeyEvent.VK_ENTER || keyCode == KeyEvent.VK_SPACE) {
+                    inMenu = false;
+                    draw();
+                } else if (keyChar == 'c' || keyCode == KeyEvent.VK_C) {
+                    inCredits = true;
+                    draw();
+                }
+            }
+            return;
+        }
+
+        if (health <= 0 || won) {
+            if (keyChar == 'r' || keyCode == KeyEvent.VK_R) {
+                resetGame();
+                draw();
+            }
+            return;
+        }
 
         if (keyChar == 'w' || keyCode == KeyEvent.VK_UP) move(-1, 0);
         else if (keyChar == 's' || keyCode == KeyEvent.VK_DOWN) move(1, 0);
@@ -413,6 +474,70 @@ public class Game {
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
 
+            if (inMenu) {
+                // Added background image rendering for the main menu and credits, with fallback black fill
+                if (inCredits) {
+                    if (creditsBackgroundImg != null) {
+                        g.drawImage(creditsBackgroundImg, 0, 0, getWidth(), getHeight(), null);
+                    } else {
+                        g.setColor(Color.BLACK);
+                        g.fillRect(0, 0, getWidth(), getHeight());
+                    }
+
+                    g.setColor(Color.YELLOW);
+                    g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 36));
+                    FontMetrics fm = g.getFontMetrics();
+                    String creditsTitle = "CREDITS";
+                    g.drawString(creditsTitle, (getWidth() - fm.stringWidth(creditsTitle)) / 2, getHeight() / 2 - 100);
+
+                    g.setColor(Color.WHITE);
+                    g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
+                    fm = g.getFontMetrics();
+                    
+                    String[] developers = {
+                        "Lead Developers: Jakov Perčin, Maksim Popović",
+                        "Level Designer: Jakov Perčin",
+                        "Artist & Textures: AI",
+                        "Enemy AI: Maksim Popović"
+                    };
+
+                    int startY = getHeight() / 2 - 40;
+                    for (String dev : developers) {
+                        g.drawString(dev, (getWidth() - fm.stringWidth(dev)) / 2, startY);
+                        startY += 30;
+                    }
+
+                    String backPrompt = "Press ESC or B to Back";
+                    g.drawString(backPrompt, (getWidth() - fm.stringWidth(backPrompt)) / 2, startY + 20);
+                } else {
+                    if (menuBackgroundImg != null) {
+                        g.drawImage(menuBackgroundImg, 0, 0, getWidth(), getHeight(), null);
+                    } else {
+                        g.setColor(Color.BLACK);
+                        g.fillRect(0, 0, getWidth(), getHeight());
+                    }
+
+                    g.setColor(Color.YELLOW);
+                    g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 40));
+                    FontMetrics fm = g.getFontMetrics();
+                    String title = "DUNGEON CRAWLER";
+                    g.drawString(title, (getWidth() - fm.stringWidth(title)) / 2, getHeight() / 2 - 40);
+
+                    g.setColor(Color.WHITE);
+                    g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
+                    fm = g.getFontMetrics();
+                    String prompt = "Press ENTER or SPACE to Start";
+                    g.drawString(prompt, (getWidth() - fm.stringWidth(prompt)) / 2, getHeight() / 2 + 20);
+
+                    String creditsOption = "Press C for Credits";
+                    g.drawString(creditsOption, (getWidth() - fm.stringWidth(creditsOption)) / 2, getHeight() / 2 + 55);
+
+                    String controls = "Controls: WASD / Arrow Keys to Move | Number keys to use items";
+                    g.drawString(controls, (getWidth() - fm.stringWidth(controls)) / 2, getHeight() / 2 + 90);
+                }
+                return;
+            }
+
             int viewWidth = VIEW_COLS * 2 + 1;
             int viewHeight = VIEW_ROWS * 2 + 1;
 
@@ -473,10 +598,10 @@ public class Game {
             String message;
             if (won) {
                 g.setColor(Color.GREEN);
-                message = "You reached the door!";
+                message = "You reached the door! Press R to Restart."; 
             } else if (health <= 0) {
                 g.setColor(Color.RED);
-                message = "You died.";
+                message = "You died. Press R to Restart."; 
             } else {
                 g.setColor(Color.LIGHT_GRAY);
                 message = "Use WASD or arrow keys to move | Use item: Number key (1-9)";
