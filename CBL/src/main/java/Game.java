@@ -189,7 +189,8 @@ public class Game {
     static boolean[][] seen;
     static int[][] enemyHp;
     static int row, col, health = MAX_HEALTH, keys = 0;
-    static int swords = 0, shields = 0;
+    static int swords = 0;
+    static int shields = 0;
     static boolean won = false;
     static boolean inMenu = true; 
     static boolean inCredits = false;
@@ -345,7 +346,6 @@ public class Game {
     }
 
     static void turn(KeyEvent e) {
-        if (health <= 0 || won) return;
         int keyCode = e.getKeyCode();
         char keyChar = Character.toLowerCase(e.getKeyChar());
 
@@ -367,6 +367,7 @@ public class Game {
             return;
         }
 
+        // Allow restarting when dead or won, before blocking other inputs
         if (health <= 0 || won) {
             if (keyChar == 'r' || keyCode == KeyEvent.VK_R) {
                 resetGame();
@@ -381,6 +382,7 @@ public class Game {
         else if (keyChar == 'd' || keyCode == KeyEvent.VK_RIGHT) move(0, 1);
         else if (Character.isDigit(keyChar)) useItem(keyChar - '1');
         else return;
+        
         if (!won) moveEnemies();
         draw();
     }
