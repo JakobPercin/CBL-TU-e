@@ -76,7 +76,7 @@ public class Game extends JPanel {
                                               ##..##  ###           #.#..#..#..#...#................................................#..................# #....PEE.#                #.#.........#   #...................#
                                                ##..#####            #..............#.#################.############################.#################### #......P.#                #.#.....E...#   #...................#
                                                 ##..###             #..............#.############### #.#                          #..#                   #....E...#                #.#.........#   #################.###
-                                                 ##..##             #.#..#..#..#...#...............# #.#                          #..#                   #........#                #.#.........#                   #.#
+                                                 ##..##             #.#..#..#..#...#...............# #.#                          #..#                   #..#                   #.#.........#                   #.#
                                                   ##..##            #..............#.....P.........# #.#############################.# ###################........#                #.#.........#                   #.#
                                                   ###..##           #.............E#...............# #...........#...................# #.................#........#                #.#.......E.#                   #.# #####
                                                  #####..##          #.#..#..#..#...#...............# #.............................#.# #.............E............#                #.#.........#                   #.###...#
@@ -119,7 +119,7 @@ public class Game extends JPanel {
                            ##         #.#################..E...................##...............#..........................#.........# #.################........##.......#        #.##########   #.#       #.......#......#
                            ##     #####.#########       #........#.......E.....############v#####.#........................#.........# #.#              #........##.......#        #.#            #.#       #.......#......#
                            ##     #.............#       #........#..........P..##...............#.###########.##############..E......# #.#              #........##.......#        #.##############.#       #...#...#.+....#
-                          ##      #.#############       #........#E............##..+............#.#........................#...E.....# #.#              #....P...##.......#        #................#########.......#......#
+                          ##      #.#############       #........#..........P..##..+............#.#........................#...E.....# #.#              #....P...##.......#        #................#########.......#......#
                           ##      #.#                   #........#..E....EP....##...............#.#..............E.........#.........# #.#              #........##.......#        #.###.........##...v.............#......#
                           ##      #.#                   #........#....E........##......P...+....#.#............+...........#.........# #.#              ######.######.#####        #.# #.........##.##..........#...########
                          ##       #.#              ######.#########......########..+............#.#.........E..............#.........###.################........##.......#        #.# #.E..E....##.##.....P........#
@@ -169,7 +169,7 @@ public class Game extends JPanel {
                                 ##
         """;
 
-    static final int MAX_HEALTH = 15;
+    static final int MAX_HEALTH = 60;
     static final int SIGHT = 3;
     static final int VIEW_ROWS = 6;
     static final int VIEW_COLS = 9;
@@ -204,6 +204,10 @@ public class Game extends JPanel {
     static boolean[][] seen;
     static int[][] enemyHp;
     static int row, col, health, keys, swords, shields, resits, fxRow, fxCol;
+    
+    
+    static boolean godMode = false; 
+
     static Color fxColor;
     static boolean won, hurt, inMenu = true, inCredits;
     static Random random = new Random();
@@ -295,15 +299,28 @@ public class Game extends JPanel {
         } else if (health <= 0 || won) {
             if (key == KeyEvent.VK_R) resetGame();
         } else {
+            // MODIFIED: Listen for '+' or 'Numpad +' or '=' to toggle Infinite Health mode
+            if (key == KeyEvent.VK_PLUS || key == KeyEvent.VK_ADD || key == KeyEvent.VK_EQUALS) {
+                godMode = !godMode;
+                screen.repaint();
+                return;
+            }
+
             hurt = false;
             fxRow = -1;
-            if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) movePlayer(-1, 0);
-            else if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) movePlayer(1, 0);
-            else if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) movePlayer(0, -1);
-            else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) movePlayer(0, 1);
-            else if (key >= KeyEvent.VK_1 && key <= KeyEvent.VK_9) useItem(key - KeyEvent.VK_1);
-            else return;
-            if (!won) moveEnemies();
+            
+            boolean actionTaken = false;
+
+            if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) actionTaken = movePlayer(-1, 0);
+            else if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) actionTaken = movePlayer(1, 0);
+            else if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) actionTaken = movePlayer(0, -1);
+            else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) actionTaken = movePlayer(0, 1);
+            else if (key >= KeyEvent.VK_1 && key <= KeyEvent.VK_9) {
+                useItem(key - KeyEvent.VK_1);
+                actionTaken = true;
+            } else return;
+
+            if (actionTaken && !won) moveEnemies();
         }
         screen.repaint();
     }
@@ -313,7 +330,7 @@ public class Game extends JPanel {
         return map[r][c];
     }
 
-    static void movePlayer(int dRow, int dCol) {
+    static boolean movePlayer(int dRow, int dCol) {
         int r = row + dRow, c = col + dCol;
         char cell = cellAt(r, c);
 
@@ -329,10 +346,11 @@ public class Game extends JPanel {
                 fxColor = HIT;
                 hurtPlayer(type);
             }
-            return;
+            return true; // Successfully attacked an enemy
         }
 
-        if (cell == '#' || (cell == 'D' && keys < KEYS)) return;
+        if (cell == '#' || (cell == 'D' && keys < KEYS)) return false;
+
         if (cell == '+') resits++;
         if (cell == 'S') swords++;
         if (cell == 'O') shields++;
@@ -341,6 +359,7 @@ public class Game extends JPanel {
         if ("v^<>".indexOf(cell) < 0) map[r][c] = '.';
         row = r;
         col = c;
+        return true; // Successfully moved to an open tile
     }
 
     static void useItem(int slot) {
@@ -350,6 +369,7 @@ public class Game extends JPanel {
     }
 
     static void hurtPlayer(int type) {
+        if (godMode) return; 
         health -= Math.max(MIN_DAMAGE, DAMAGE[type] - shields);
         hurt = true;
     }
@@ -428,12 +448,15 @@ public class Game extends JPanel {
         g.fillRect(0, hudY, getWidth(), HUD);
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
-        String status = "ECTS " + Math.max(0, health) + "/" + MAX_HEALTH + "  |  Keys " + keys + "/" + KEYS
+        
+        String status = "ECTS " + (godMode ? "∞" : Math.max(0, health)) + "/" + MAX_HEALTH
+                + (godMode ? " [GOD MODE]" : "")
+                + "  |  Keys " + keys + "/" + KEYS
                 + "  |  ATK " + (BASE_ATTACK + swords) + "  |  DEF " + shields + "  |  Items:";
         for (int i = 1; i <= resits; i++) status += " " + i + "=resit";
         g.drawString(status, 15, hudY + 25);
 
-        String text = "Use WASD or arrow keys to move | Use item: Number key (1-9)";
+        String text = "WASD/Arrows to move | 1-9 to use item | '+' to toggle Infinite Health";
         g.setColor(Color.LIGHT_GRAY);
         if (health <= 0) { g.setColor(Color.RED); text = "You died. Press R to Restart."; }
         if (won) { g.setColor(Color.GREEN); text = "You reached the door! Press R to Restart."; }
@@ -447,7 +470,7 @@ public class Game extends JPanel {
 
         g.setColor(Color.YELLOW);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, inCredits ? 36 : 40));
-        centered(g, inCredits ? "CREDITS" : "DUNGEON CRAWLER", inCredits ? y - 100 : y - 40);
+        centered(g, inCredits ? "CREDITS" : "Student Struggles", inCredits ? y - 100 : y - 40);
 
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
@@ -460,7 +483,7 @@ public class Game extends JPanel {
         } else {
             centered(g, "Press ENTER or SPACE to Start", y + 20);
             centered(g, "Press C for Credits", y + 55);
-            centered(g, "Controls: WASD / Arrow Keys to Move | Number keys to use items", y + 90);
+            centered(g, "Controls: WASD / Arrow Keys to Move | Number keys to use items | '+' God Mode", y + 90);
         }
     }
 
