@@ -3,6 +3,7 @@ No external libraries were used.
 
 Make sure project structure is as the following:
 
+```
 CBL-TU/e /
 |  CBL/
 |  ├── src/
@@ -22,7 +23,7 @@ CBL-TU/e /
 |  ├── sword.png
 |  ├── shield.png
 |  └── fog.png
-
+```
 Just some tips for the game:
 ECTS is the health of the player
 Resits heal 7 health
