@@ -25,8 +25,8 @@ CBL-TU/e /
 |  └── fog.png
 ```
 Just some tips for the game:
-ECTS is the health of the player
-Resits heal 7 health
+ECTS is the health of the player.
+Resits heal 7 ECTS.
 You kill enemies by bumping into them. Depending on the type of the enemy, you may need to bump into them multiple times.
 If you see two consecutive arrows, that's where the exit is located.
 
