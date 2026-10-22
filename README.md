@@ -1,6 +1,8 @@
 Java Development Kit (JDK): Version 17 or higher.
 No external libraries were used.
 
+To run the game, run the Game.java.
+
 Make sure project structure is as the following:
 
 ```
@@ -11,18 +13,23 @@ CBL-TU/e /
 |  │       └── java/
 |  │           └── Game.java
 |  textures/
-|  ├── goldfish.png
+|  ├── player.png
 |  ├── wall.png
 |  ├── floor.png
 |  ├── enemy.png
-|  ├── crab.png
-|  ├── piranha.png
+|  ├── security.png
+|  ├── professor.png
 |  ├── item.png
 |  ├── key.png
 |  ├── door.png
 |  ├── sword.png
 |  ├── shield.png
-|  └── fog.png
+|  ├── arrow_right.png
+|  ├── arrow_up.png
+|  ├── arrow_left.png
+|  ├── arrow_down.png
+|  ├── menubg.png
+|  └── student_struggles_map.png
 ```
 Just some tips for the game:
 ECTS is the health of the player.
