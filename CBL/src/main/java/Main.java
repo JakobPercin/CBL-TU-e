@@ -17,7 +17,7 @@ public class Main {
                 lines.add(scanner.nextLine());
             }
         } catch (IOException e) {
-            // e.printStackTrace();
+            
             System.out.println("Error reading " + filename);
         }
         return lines;
@@ -139,7 +139,7 @@ class Enemy {
         if (pos.isNear(playerPos, GameLogic.SIGHT) && rng.nextBoolean()) {
             return pos.stepTowards(playerPos);
         }
-        // security doesn't walk around randomly
+        
         if (type == EnemyType.SECURITY) {
             return null;
         }
@@ -154,7 +154,7 @@ class Enemy {
             }
             Position nextPos = pos.add(step);
             if (nextPos.sameAs(playerPos)) {
-                // System.out.println("Enemy hit player: " + type.damage);
+                
                 return type.damage;
             }
             if (!level.canEnemyMoveTo(nextPos)) {
@@ -192,7 +192,7 @@ class Player {
         if (resits > 0) {
             resits--;
             health = Math.min(MAX_HP, health + 7);
-            // System.out.println("Used resit, hp now: " + health);
+            
         }
     }
 
@@ -381,7 +381,7 @@ class GameLogic {
 
         if (tile == 'D') {
             won = true;
-            // System.out.println("Player won!");
+            
         }
         player.pickUp(tile);
 
@@ -445,7 +445,7 @@ class GamePanel extends JPanel {
     static final int MAP_H = (VIEW_R * 2 + 1) * TILE;
     static final int HUD_H = 60;
 
-    // TODO: maybe add instructions screen later
+    
     static final String[] MENU_TEXT = {
       "Press ENTER or SPACE to Start",
       "Press C for Credits",
@@ -516,7 +516,7 @@ class GamePanel extends JPanel {
     }
 
     private void onKeyPress(int code) {
-        // System.out.println("Key pressed: " + code);
+        
         if (showCredits) {
             if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_B) {
                 showCredits = false;
@@ -594,7 +594,7 @@ class GamePanel extends JPanel {
         if (img != null) {
             g.drawImage(img, x * TILE, y * TILE, TILE, TILE, null);
         } else if (symbol != ' ') {
-            // fallback if image doesn't load
+            
             g.setColor(Color.GRAY);
             g.fillRect(x * TILE, y * TILE, TILE, TILE);
             g.setColor(Color.WHITE);
