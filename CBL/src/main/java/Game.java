@@ -8,7 +8,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-public class Main {
+public class Game {
 
     private static List<String> readLevelFile(String filename) {
         List<String> lines = new ArrayList<>();
